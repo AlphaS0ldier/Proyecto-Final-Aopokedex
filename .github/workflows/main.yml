@@ -60,7 +60,6 @@ jobs:
         run: |
           ls -la /tmp/wordpress
           ls -la /tmp/wordpress-tests-lib
-          cat /tmp/wordpress/wp-config.php
 
       - name: Create wp-tests-config.php
         run: |
