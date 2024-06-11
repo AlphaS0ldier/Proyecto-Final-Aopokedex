@@ -51,7 +51,7 @@ jobs:
       # Install PHP
     - name: Setup PHP
       # Using this repo
-      uses: shivammathur/setup-php@v1
+      uses: shivammathur/setup-php@v2
       # And these settings
       with:
         php-version: ${{ matrix.php-versions }} # Change the version to install with the matrix variables above.
