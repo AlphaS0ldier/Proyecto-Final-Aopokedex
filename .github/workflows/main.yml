@@ -71,6 +71,8 @@ jobs:
           define( 'WP_TESTS_TITLE', 'Test Blog' );
           define( 'WP_PHP_BINARY', 'php' );
           define( 'WP_TESTS_DIR', dirname( __FILE__ ) . '/tmp/wordpress-tests-lib' );
+          require_once WP_TESTS_DIR . '/includes/functions.php';
+          require_once WP_TESTS_DIR . '/includes/bootstrap.php';
           " > wp-tests-config.php
 
       - name: Create bootstrap.php
