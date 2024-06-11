@@ -92,4 +92,4 @@ jobs:
         run: mysqladmin ping -h 127.0.0.1 -P 33306 --silent
 
       - name: PHPUnit tests
-        run: vendor/bin/phpunit --bootstrap tests/bootstrap.php
+        run: vendor/bin/phpunit tests
