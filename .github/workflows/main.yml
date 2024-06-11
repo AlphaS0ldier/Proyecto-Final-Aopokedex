@@ -1,96 +1,65 @@
-# Run the github Continuous Integration
 name: CI
 
-# Run this action on:
 on:
-  
-  # When the repo is PUSHed to [master] branch
   push:
     branches: [ main ]
-
-  # And allow a manual 'run' button in the github action tab
   workflow_dispatch:
 
-# When run do this job:
 jobs:
-  run:    
-
-    # Use the operating system specified in the strategy 'matrix' below.
+  run:
     runs-on: ${{ matrix.operating-system }}
-
-    # Matrix of variables 
-    strategy:      
+    strategy:
       matrix:
         operating-system: [ubuntu-latest]
         php-versions: ['8.1.2']
         phpunit: [10.5.20]
 
-    # Give the runner a title (using the matrix variables)
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
-    
-    # Include MySQL as a service
+
     services:
       mysql:
         image: mysql:8.0.36
         env:
-          # Default password into the databases
           MYSQL_ROOT_PASSWORD: root
         ports:
-            # Use a different port to tunnel into the container.
           - 33306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-    # Now do these steps.
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      # Use the 'checkout' action (https://github.com/actions/checkout)
-      # To pull this repo into the root of your container.
-    - name: Checkout
-      uses: actions/checkout@v2
-    
-      # Install PHP
-    - name: Setup PHP
-      # Using this repo
-      uses: shivammathur/setup-php@v2
-      # And these settings
-      with:
-        php-version: ${{ matrix.php-versions }} # Change the version to install with the matrix variables above.
-        extension-csv: mbstring, intl #optional, setup extensions
-        ini-values-csv: post_max_size=256M, short_open_tag=On #optional, setup php.ini configuration
-        coverage: xdebug #optional, setup coverage driver
-        pecl: false #optional, setup PECL
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extension-csv: mbstring, intl
+          ini-values-csv: post_max_size=256M, short_open_tag=On
+          coverage: xdebug
+          pecl: false
 
-      # Check PHP is installed.
-      # Weird Note - the next step 'composer install' fails if this PHP Check is not run.
-    - name: Check PHP Version
-      run: php -v
+      - name: Check PHP Version
+        run: php -v
 
-      # Install composer to use your autoloader
-    - name: Composer install
-      run: composer install --optimize-autoloader --prefer-dist
-      
-      # Install PHPUnit using the matrix variables above
-    - name: Install PHPUnit
-      run: composer global require "phpunit/phpunit=${{ matrix.phpunit }}"
+      - name: Composer install
+        run: composer install --optimize-autoloader --prefer-dist
 
-      # Check listing of directory
-      # Also a quick example of multi-commands and the $GITHUB_WORKSPACE variable.
-    - name: list dir
-      run: |
-        ls -la
-        ls $GITHUB_WORKSPACE
+      - name: Install PHPUnit
+        run: composer global require "phpunit/phpunit=${{ matrix.phpunit }}"
 
-      # Run the Wordpress PHPUnit install script.
-      # This will install wordpress into /tmp/wordpress
-      # It will create a wordpress_test database using the [root root] credentials
-      # It will connect to the localhost (127.0.0.1) using the port 33306
-      #
-      # Note - use the external container port listed above in the mysql section.
-      # Install the 'latest' version of wordpress too.
-    - name: Install WP Tests
-      run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:33306 latest
-      
-      # RUN, You fools.
-      # Kick of the phpunit testsuite.
-    - name: PHPUnit tests
-      run: phpunit
+      - name: list dir
+        run: |
+          ls -la
+          ls $GITHUB_WORKSPACE
+
+      - name: Install WP Tests
+        run: |
+          if [ ! -f bin/install-wp-tests.sh ]; then
+            mkdir -p bin
+            curl -o bin/install-wp-tests.sh https://raw.githubusercontent.com/wp-cli/scaffold-command/master/templates/install-wp-tests.sh
+            chmod +x bin/install-wp-tests.sh
+          fi
+          bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:33306 latest
+
+      - name: PHPUnit tests
+        run: phpunit
