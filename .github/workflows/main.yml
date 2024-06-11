@@ -47,23 +47,6 @@ jobs:
       # To pull this repo into the root of your container.
     - name: Checkout
       uses: actions/checkout@v2
-
-      # Also pull a second (private) repo.
-    - name: Checkout ACF-pro
-      uses: actions/checkout@v2
-      with:
-        # Name of the repo to pull
-        repository: IORoot/advanced-custom-fields-pro
-        # Put it in a separate directory
-        path: advanced-custom-fields-pro
-        # Pull the master branch
-        ref: master
-        # Use this deploy secret to allow access to the private repo
-        # 1. Add the deploy key to the private repo (https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys)
-        # 2. Add a secret called 'QA_DEPLOY_KEY' into the secrets of THIS repo with the deploy key. https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets
-        # 
-        # Now this repo can access the private repo using the token.
-        token: ${{ secrets.QA_DEPLOY_KEY }}
     
       # Install PHP
     - name: Setup PHP
