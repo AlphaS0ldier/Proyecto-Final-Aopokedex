@@ -1,20 +1,36 @@
-<?php 
+<?php
 
 function llamar_api($url_api)
 {
 
-    $response = wp_remote_get($url_api);
-    if (is_wp_error($response)) {
-        return 'Error al obtener los datos';
+    // URL of the PokeAPI endpoint you want to access
+    $apiUrl = $url_api;
+    
+    // Initialize cURL session
+    $curl = curl_init();
+    
+    // Set cURL options
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => $apiUrl,
+        CURLOPT_RETURNTRANSFER => true,  // Return the response as a string
+        CURLOPT_SSL_VERIFYPEER => false, // Do not verify SSL certificate
+    ));
+    
+    // Execute the cURL request
+    $response = curl_exec($curl);
+    
+    // Check for errors
+    if ($response === false) {
+        // Handle error
+        echo "cURL Error: " . curl_error($curl);
+    } else {
+        // Decode JSON response
+        $data = json_decode($response, true);
     }
-
-    // Decodificar JSON
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo 'Error al decodificar los datos JSON: ' . json_last_error_msg();
-    }
+    
+    // Close cURL session
+    curl_close($curl);
+    
 
     return $data;
 }
@@ -49,58 +65,15 @@ function coger_pokedex_region_y_generacion($datos)
 
             $pokedex_regional[$numero_pokedex["pokedex"]["name"]] = $numero_pokedex["entry_number"];
 
-            if (!term_exists($numero_pokedex["pokedex"]["name"], 'pokedex_region')) {
-
-                $pokedex = end(llamar_api($numero_pokedex["pokedex"]["url"])["pokemon_entries"]);
-
-                wp_insert_term(
-                    $numero_pokedex["pokedex"]["name"],
-                    'pokedex_region',
-                    ['description' => $pokedex['entry_number']]
-                );
-
-            }
-
-            $pokedex_generacion[] = get_term_by('name', $numero_pokedex["pokedex"]["name"], 'pokedex_region')->term_id;
-
         } else if ($numero_pokedex["pokedex"]["name"] == "original-johto") {
 
             $nombre_generacion = explode('-', $numero_pokedex["pokedex"]["name"])[1];
 
             $pokedex_regional[$nombre_generacion] = $numero_pokedex["entry_number"];
 
-            if (!term_exists($nombre_generacion, 'pokedex_region')) {
-
-                $pokedex = end(llamar_api($numero_pokedex["pokedex"]["url"])["pokemon_entries"]);
-
-                wp_insert_term(
-                    $nombre_generacion,
-                    'pokedex_region',
-                    ['description' => $pokedex['entry_number']]
-                );
-            }
-
-            $pokedex_generacion[] = get_term_by('name', $nombre_generacion, 'pokedex_region')->term_id;
-
         } else if ($numero_pokedex["pokedex"]["name"] == "kanto") {
 
             $pokedex_regional[$numero_pokedex["pokedex"]["name"]] = $numero_pokedex["entry_number"];
-
-            if (!term_exists($numero_pokedex["pokedex"]["name"], 'pokedex_region')) {
-
-                $pokedex = end(llamar_api($numero_pokedex["pokedex"]["url"])["pokemon_entries"]);
-
-
-                wp_insert_term(
-                    $numero_pokedex["pokedex"]["name"],
-                    'pokedex_region',
-                    ['description' => $pokedex['entry_number']]
-                );
-
-            }
-
-            $pokedex_generacion[] = get_term_by('name', $numero_pokedex["pokedex"]["name"], 'pokedex_region')->term_id;
-
         }
     }
 
@@ -264,51 +237,6 @@ function coger_tipos($datos)
 
     foreach ($datos as $tipo) {
         $tipos[] = $tipo["type"]["name"];
-
-        $tipo_existe = get_posts(
-            array(
-                'post_type' => 'pokemon_type',
-                'meta_key' => '_name',
-                'meta_value' => $tipo["type"]["name"],
-                'post_status' => 'publish',
-                'posts_per_page' => 1,
-            )
-        );
-
-        if (empty($tipo_existe)) {
-            $new_post = array(
-                'post_title' => $tipo["type"]["name"],
-                'post_content' => "",
-                'post_status' => 'publish',
-                'post_author' => 1,
-                'post_type' => 'pokemon_type',
-            );
-
-            $post_id = wp_insert_post($new_post);
-
-
-
-            $debilidades_api = llamar_api($tipo["type"]["url"])["damage_relations"];
-
-            $debilidades = [];
-
-            foreach ($debilidades_api["double_damage_from"] as $multiplicador) {
-                $debilidades["2x"][] = $multiplicador["name"];
-            }
-
-            foreach ($debilidades_api["half_damage_from"] as $multiplicador) {
-                $debilidades["0.5x"][] = $multiplicador["name"];
-            }
-
-            foreach ($debilidades_api["no_damage_from"] as $multiplicador) {
-                $debilidades["0x"][] = $multiplicador["name"];
-            }
-
-            add_post_meta($post_id, "_name", $tipo["type"]["name"]);
-
-            add_post_meta($post_id, "_type_weakness", $debilidades);
-
-        }
     }
 
     return $tipos;
