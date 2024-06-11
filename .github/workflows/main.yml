@@ -23,7 +23,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 33306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout
@@ -55,6 +55,12 @@ jobs:
             chmod +x bin/install-wp-tests.sh
           fi
           bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:33306 latest
+
+      - name: Verify WP Tests Installation
+        run: |
+          ls -la /tmp/wordpress
+          ls -la /tmp/wordpress-tests-lib
+          cat /tmp/wordpress/wp-config.php
 
       - name: Create wp-tests-config.php
         run: |
