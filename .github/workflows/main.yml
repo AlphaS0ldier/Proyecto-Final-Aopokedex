@@ -22,8 +22,8 @@ jobs:
     strategy:      
       matrix:
         operating-system: [ubuntu-latest]
-        php-versions: ['7.4']
-        phpunit: [7.5.15]
+        php-versions: ['8.1.2']
+        phpunit: [10.5.20]
 
     # Give the runner a title (using the matrix variables)
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
@@ -31,7 +31,7 @@ jobs:
     # Include MySQL as a service
     services:
       mysql:
-        image: mysql:5.7.27
+        image: mysql:8.0.36
         env:
           # Default password into the databases
           MYSQL_ROOT_PASSWORD: root
