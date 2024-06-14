@@ -2,33 +2,24 @@
 
 function llamar_api($url_api)
 {
-
-    // URL of the PokeAPI endpoint you want to access
     $apiUrl = $url_api;
     
-    // Initialize cURL session
     $curl = curl_init();
     
-    // Set cURL options
     curl_setopt_array($curl, array(
         CURLOPT_URL => $apiUrl,
-        CURLOPT_RETURNTRANSFER => true,  // Return the response as a string
-        CURLOPT_SSL_VERIFYPEER => false, // Do not verify SSL certificate
+        CURLOPT_RETURNTRANSFER => true,  
+        CURLOPT_SSL_VERIFYPEER => false,
     ));
     
-    // Execute the cURL request
     $response = curl_exec($curl);
     
-    // Check for errors
     if ($response === false) {
-        // Handle error
         echo "cURL Error: " . curl_error($curl);
     } else {
-        // Decode JSON response
         $data = json_decode($response, true);
     }
     
-    // Close cURL session
     curl_close($curl);
     
 
